@@ -9,7 +9,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/Debug/Snake.exe",
+            "program": "${workspaceFolder}/Debug/RSA.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

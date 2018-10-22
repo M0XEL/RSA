@@ -1,302 +1,145 @@
+#include <string>
 #include <iostream>
-#include <time.h>
-#include <vector>
-#include <Windows.h>
-#include <conio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <chrono>
 
-struct Vec2
-{
-	int x, y;
+struct KeyTupel {
+	int component_0;
+	int component_1;
 };
 
-namespace optionvalues
+struct Message {
+	std::string string;
+	int signature;
+};
+
+inline int generateKey()
 {
-	bool is_endless_border{ true };
-	unsigned short difficulty{ 3 };
-}
+	//using namespace std::chrono;
+	//int timestamp = duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
+	//std::hash<int> hasher;
+	//return hasher(timestamp);
 
-namespace highscore
-{
-	struct Item
-	{
-		char* player_name;
-		int player_score;
-	};
-	std::vector<Item> list;
-}
-
-void gotoHighscores()
-{
-	system("cls");
-	std::cout << "___Highscores___" << std::endl << std::endl;
-
-	for (int i = 0; i < highscore::list.size(); i++)
-		std::cout << "Player '" << highscore::list[i].player_name << "', "
-		<< "Score:   " << highscore::list[i].player_score << std::endl;
-
-	std::cout << std::endl;
-	std::cout << "Press 'ENTER' to continue";
-	std::cin.ignore(80, '\n');
-	std::cin.get();
-}
-
-void gotoOptions()
-{
-	bool is_running{ true };
-	while (is_running) {
-		char* border = (optionvalues::is_endless_border) ? "Endless" : "Death  ";
-
-		char* difficulty;
-		switch (optionvalues::difficulty)
-		{
-		case 1: difficulty = "Easy   "; break;
-		case 2: difficulty = "Medium "; break;
-		case 3: difficulty = "Hard   "; break;
-		default: difficulty = "       "; break;
-		}
-
-		system("cls");
-		std::cout << "___Options___" << std::endl << std::endl;
-		std::cout << "Toggle Endless/Death Border [now: " << border << "]  (press '1')" << std::endl;
-		std::cout << "Toggle Difficulty           [now: " << difficulty << "]  (press '2')" << std::endl;
-		std::cout << "---DONE---  (press '0')" << std::endl << std::endl;
-		std::cout << "Decision: ";
-
-		int input;
-		std::cin >> input;
-		if (std::cin.fail()) {
-			std::cin.clear();
-			std::cin.ignore(80, '\n');
-		}
-
-		switch (input)
-		{
-		case 0: is_running = false; break;
-		case 1: optionvalues::is_endless_border = (optionvalues::is_endless_border) ? false : true; break;
-		case 2:
-			switch (optionvalues::difficulty)
-			{
-			case 1: optionvalues::difficulty = 2; break;
-			case 2: optionvalues::difficulty = 3; break;
-			case 3: optionvalues::difficulty = 1; break;
-			}
-			break;
-		}	
-	}
-}
-
-void drawField(char field[12][12],const int score)
-{
-	system("cls");
-	std::cout << "___Score " << score << "___" << std::endl << std::endl;
-
-	// Left/Right border
-	for (int i = 0; i < 12; i++) {
-		field[i][0] = '#';
-		field[i][11] = '#';
-	}
-	// Up/Down border
-	for (int j = 0; j < 12; j++) {
-		field[0][j] = '#';
-		field[11][j] = '#';
-	}
-
-	// Draw field
-	for (int i = 0; i < 12; i++) {
-		for (int j = 0; j < 12; j++)
-			std::cout << field[i][j];
-		std::cout << std::endl;
-	}	
-}
-
-void startRound()
-{
 	srand(time(nullptr));
-	char input;
-	char field[12][12];
-	int score{ 0 };
-	Vec2 player_head{ 5, 5 };
-	Vec2 previous_player_head;
-	Vec2 player_tail_end;
-	Vec2 previous_player_tail;
-	Vec2 saved_player_tail;
-	Vec2 fruit{ rand() % 10 + 1, rand() % 10 + 1 };
-	Vec2 fruit2{ rand() % 10 + 1, rand() % 10 + 1 };
-	std::vector<Vec2> player_tail;
-	bool has_tail{ false };
-
-	enum Direction
-	{
-		INVALID,
-		UP,
-		LEFT,
-		DOWN,
-		RIGHT
-	} player_direction;
-	player_direction = INVALID;
-
-	// clear field
-	for (int i = 0; i < 12; i++)
-		for (int j = 0; j < 12; j++)
-			field[i][j] = ' ';
-
-	field[player_head.y][player_head.x] = 'O';
-	field[fruit.y][fruit.x] = '+';
-	if (optionvalues::difficulty == 3)
-		field[fruit2.y][fruit2.x] = '-';
-
-	drawField(field, score);
-	
-	bool is_runnig{ true };
-	while (is_runnig) {
-		
-		// Input
-		if (_kbhit()) {
-			switch (_getch())
-			{
-			case 'w': player_direction = UP; break;
-			case 'W': player_direction = UP; break;
-
-			case 'a': player_direction = LEFT; break;
-			case 'A': player_direction = LEFT; break;
-
-			case 's': player_direction = DOWN; break;
-			case 'S': player_direction = DOWN; break;
-
-			case 'd': player_direction = RIGHT; break;
-			case 'D': player_direction = RIGHT; break;
-			}
-		}
-
-		previous_player_head = player_head;
-		if (has_tail)
-			player_tail_end = player_tail[player_tail.size() - 1];
-		else 
-			player_tail_end = player_head;
-
-		switch (player_direction)
-		{
-		case UP: player_head.y--; break;
-		case LEFT: player_head.x--; break;
-		case DOWN: player_head.y++; break;
-		case RIGHT: player_head.x++; break;
-		}
-
-		for (int i = 0; i < 12; i++)
-			for (int j = 0; j < 12; j++)
-				field[i][j] = ' ';
-
-		// Eat fruit
-		if (player_head.x == fruit.x && player_head.y == fruit.y) {
-			player_tail.push_back(player_tail_end);
-			fruit.x = rand() % 10 + 1;
-			fruit.y = rand() % 10 + 1;
-			score++;
-		}
-		if (optionvalues::difficulty == 3)
-			if (player_head.x == fruit2.x && player_head.y == fruit2.y) {
-				fruit2.x = rand() % 10 + 1;
-				fruit2.y = rand() % 10 + 1;
-				if (score > 0) {
-					player_tail.pop_back();
-					score--;
-				}
-			}
-
-		// Game over
-		for (int i = 0; i < player_tail.size(); i++)
-			if (player_head.x == player_tail[i].x && player_head.y == player_tail[i].y) {
-				is_runnig = false;
-
-				highscore::Item item;
-				item.player_name = "BestSnakePlayer99";
-				item.player_score = score;
-				highscore::list.push_back(item);
-			}
-
-		// Border
-		if (optionvalues::is_endless_border) {
-			if (player_head.x < 1)
-				player_head.x = 10;
-
-			else if (player_head.x > 10)
-				player_head.x = 1;
-
-			else if (player_head.y < 1)
-				player_head.y = 10;
-
-			else if (player_head.y > 10)
-				player_head.y = 1;
-		}
-		else {
-			if (player_head.x < 1 || player_head.x > 11 ||
-				player_head.y < 1 || player_head.y > 11) {
-				is_runnig = false;
-
-				highscore::Item item;
-				item.player_name = "BestSnakePlayer99";
-				item.player_score = score;
-				highscore::list.push_back(item);
-			}
-		}
-		
-		// Move Tail
-		previous_player_tail = previous_player_head;
-		for (int i = 0; i < player_tail.size(); i++) {
-			saved_player_tail = player_tail[i];
-			player_tail[i] = previous_player_tail;
-			previous_player_tail = saved_player_tail;
-		}
-
-		// Fill Field
-		field[fruit.y][fruit.x] = '+';
-		if (optionvalues::difficulty == 3)
-			field[fruit2.y][fruit2.x] = '-';
-
-		field[player_head.y][player_head.x] = '0';
-		for (int i = 0; i < player_tail.size(); i++)
-			field[player_tail[i].y][player_tail[i].x] = 'o';
-		
-		drawField(field, score);
-
-		switch (optionvalues::difficulty)
-		{
-		case 1: Sleep(250); break;
-		case 2: Sleep(150); break;
-		case 3: Sleep(100); break;
-		}
-	}
-
-	std::cout << std::endl;
-	std::cout << "Press 'ENTER' to continue";
-	std::cin.ignore(80, '\n');
-	std::cin.get();
+	return rand();
 }
 
+Message encryptMessageXor(int key, Message message)
+{
+	for (int i = 0; i < message.string.size(); i++)
+		message.string[i] ^= key;
+
+	return message;
+}
+
+size_t hashMessage(Message message)
+{
+	std::hash<std::string> hasher;
+	return hasher(message.string);
+}
+
+struct Entity
+{
+	int private_key;
+	int shared_key;
+	Message message;
+
+	void generatePrivateKey()
+	{
+		private_key = generateKey();
+	}
+
+	int createPuplicKeyPair(KeyTupel public_key)
+	{
+		return ((int)pow(public_key.component_0, private_key)) % public_key.component_1;
+	}
+
+	void createSharedKey(int public_key_pair, int public_key_component_1)
+	{
+		shared_key = ((int)pow(public_key_pair, private_key)) % public_key_component_1;
+	}
+
+	void signateMessage(size_t hash)
+	{
+		message.signature = hash + shared_key; // TODO
+	}
+
+	size_t designateMessage()
+	{
+		return message.signature - shared_key; // TODO
+	}
+
+	void show()
+	{
+		std::cout << "#####################################" << std::endl;
+		std::cout << "Private Key       |" << private_key << std::endl;
+		std::cout << "Shared Key        |" << shared_key << std::endl;
+		std::cout << "Message String    |" << message.string << std::endl;
+		std::cout << "Message Signature |" << message.signature << std::endl;
+		std::cout << "#####################################\n" << std::endl;
+	}
+};
+
+bool compareHashes(Message message, Entity user)
+{
+	if (hashMessage(message) == user.designateMessage()) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
 
 int main()
 {
-	bool is_running{ true };
-	while (is_running) {
-		system("cls");
+	Entity user_0;
+	user_0.generatePrivateKey();
 
-		std::cout << "___This is a Snake Game!___" << std::endl << std::endl;
-		std::cout << " Start     (press 'S')" << std::endl;
-		std::cout << " Highscore (press 'H')" << std::endl;
-		std::cout << " Options   (press 'O')" << std::endl;
-		std::cout << " Close     (press 'C')" << std::endl << std::endl;
-		std::cout << "Decition: ";
+	Entity user_1;
+	user_1.generatePrivateKey();
 
-		char input;
-		std::cin >> input;
+	KeyTupel public_key;
+	public_key.component_0 = generateKey();
+	public_key.component_1 = generateKey();
 
-		if (input == 's' || input == 'S')
-			startRound();
-		else if (input == 'h' || input == 'H')
-			gotoHighscores();
-		else if (input == 'o' || input == 'O')
-			gotoOptions();
-		else if (input == 'c' || input == 'C')
-			is_running = false;
-	}
+	KeyTupel public_key_pair;
+	public_key_pair.component_0 = user_0.createPuplicKeyPair(public_key);
+	public_key_pair.component_1 = user_1.createPuplicKeyPair(public_key);
+
+	user_0.createSharedKey(public_key_pair.component_1, public_key.component_1);
+	user_1.createSharedKey(public_key_pair.component_0, public_key.component_1);
+
+	user_0.message.string = "Hello World!";
+
+	Message secret_message;
+	secret_message = encryptMessageXor(user_0.shared_key, user_0.message);
+	size_t message_hash = hashMessage(secret_message);
+	user_0.signateMessage(message_hash);
+	secret_message.signature = user_0.message.signature;
+
+	//secret_message.string = "Hacked!";
+	//secret_message.signature = 123;
+
+	user_1.message = encryptMessageXor(user_1.shared_key, secret_message);
+
+	std::cout << "#####################################" << std::endl;
+	std::cout << "Puplic Key(s)   |" << public_key.component_0 << ", " << public_key.component_1 << std::endl;
+	std::cout << "Public Key Pair |" << public_key_pair.component_0 << ", " << public_key_pair.component_1 << std::endl;
+	std::cout << "#####################################\n" << std::endl;
+
+	user_0.show();
+
+	std::cout << "#####################################" << std::endl;
+	std::cout << "Encrypted Message String |" << secret_message.string << std::endl;
+	std::cout << "Encrypted Message Signature |" << secret_message.signature << std::endl;
+	std::cout << "#####################################\n" << std::endl;
+
+	user_1.show();
+
+	if (!compareHashes(secret_message, user_1))
+		std::cout << "Data corrupted!" << std::endl;
+
+	getchar();
+	return 0;
 }
