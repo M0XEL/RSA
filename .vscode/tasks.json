@@ -6,7 +6,8 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "C:/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/MSBuild/15.0/Bin/MSBuild.exe", // "msbuild" not working :(
+            // Install 'Windows Universal CRT SDK' in 'Visual Studio Installer' manually for 'msbuild' to work!
+            "command": "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/MSBuild/15.0/Bin/MSBuild.exe", // "msbuild" not working :(
             "args": [
                 // Ask msbuild to generate full paths for file names.
                 "/property:GenerateFullPaths=true",
